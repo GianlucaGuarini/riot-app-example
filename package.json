@@ -1,0 +1,50 @@
+{
+  "name": "riot-app-example",
+  "version": "1.0.0",
+  "description": "riot demo app",
+  "main": "index.js",
+  "scripts": {
+    "test": "test",
+    "build-tags": "riot app/components/src app/components/lib/tags.js --type babel",
+    "watch-tags": "riot app/components/src app/components/lib/tags.js --watch --type babel",
+    "build-js": "rollup -c rollup.config.js",
+    "watch-js": "nodemon --watch app/assets/js/src ./node_modules/.bin/rollup -c rollup.config.js",
+    "build": "npm run build-tags && ",
+    "start": "nodemon -e js,tag ./node_modules/.bin/babel-node --presets es2015 -- index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GianlucaGuarini/riot-app-example.git"
+  },
+  "keywords": [
+    "riot",
+    "app",
+    "example",
+    "demo"
+  ],
+  "author": "Gianluca Guarini <gianluca.guarini@gmail.com> (http://gianlucaguarini.com/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/GianlucaGuarini/riot-app-example/issues"
+  },
+  "homepage": "https://github.com/GianlucaGuarini/riot-app-example#readme",
+  "dependencies": {
+    "ejs": "^2.3.4",
+    "express": "^4.13.3",
+    "riot": "^2.3.11"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.2.0",
+    "babel-plugin-external-helpers-2": "^6.1.18",
+    "babel-plugin-transform-es2015-modules-umd": "^6.1.18",
+    "babel-preset-es2015": "^6.1.18",
+    "node-sass": "^3.4.2",
+    "nodemon": "^1.8.1",
+    "riot-cli": "^2.3.12",
+    "rollup": "^0.21.1",
+    "rollup-plugin-babel": "^2.2.0",
+    "rollup-plugin-commonjs": "^1.4.0",
+    "rollup-plugin-inject": "^1.2.0",
+    "rollup-plugin-npm": "^1.1.0"
+  }
+}
