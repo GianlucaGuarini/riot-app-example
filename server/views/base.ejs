@@ -8,10 +8,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href='https://fonts.googleapis.com/css?family=Lato:400,300,700' rel='stylesheet' type='text/css'>
   <link rel="stylesheet" href="/sass/style.sass">
-
+  <script>
+    var initialData = '<%- initialData %>'
+  </script>
   </head>
   <body>
     <%- body %>
-    <script src="/js/lib/index.js"></script>
+    <script src="/js/bundle.js"></script>
   </body>
 </html>

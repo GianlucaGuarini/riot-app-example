@@ -4,8 +4,8 @@ import inject from 'rollup-plugin-inject'
 import babel from 'rollup-plugin-babel'
 
 export default {
-  entry: 'app/assets/js/src/index.js',
-  dest: 'app/assets/js/lib/index.js',
+  entry: 'client/assets/js/src/index.js',
+  dest: 'client/assets/js/bundle.js',
   format: 'umd',
   plugins: [
     babel({
@@ -36,7 +36,8 @@ export default {
     }),
     npm({
       jsnext: true,
-      main: true
+      main: true,
+      skyp: ['http']
     }),
     inject({
       riot: 'riot/riot'
