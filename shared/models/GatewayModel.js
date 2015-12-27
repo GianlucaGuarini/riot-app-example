@@ -4,6 +4,8 @@ import riot from 'riot/riot'
 export default class {
   constructor(opts) {
     riot.observable(this)
+    this.isServer = typeof window === 'undefined'
+    this.isClient = !this.isServer
     this.url = opts.url
   }
   fetch() {

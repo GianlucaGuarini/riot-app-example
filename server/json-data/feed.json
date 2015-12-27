@@ -1,0 +1,10 @@
+{
+  "view": "feed",
+  "data": {
+    "title": "Welcome to the live news feed",
+    "message": "hi",
+    "news": [
+
+    ]
+  }
+}

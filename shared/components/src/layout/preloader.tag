@@ -1,3 +1,0 @@
-<preloader>
-
-</preloader>

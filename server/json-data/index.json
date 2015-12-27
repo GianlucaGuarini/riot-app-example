@@ -1,6 +1,7 @@
 {
   "view": "index",
   "data": {
+    "title": "This is the homepage",
     "message": "hi"
   }
 }

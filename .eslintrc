@@ -21,6 +21,8 @@ ecmaFeatures:
 
 globals:
   riot: true
+  socket: true
+  io: true
 
   ###########################################################################
   #                                                                         #

@@ -1,5 +1,11 @@
 import sass from 'node-sass'
 import { join } from 'path'
+import postcss from 'postcss'
+import autoprefixer from 'autoprefixer'
+
+var prefixer = postcss([ autoprefixer ]);
+
+
 
 // auto compile the sass files on any request
 export default function(STATIC_FOLDER) {
@@ -10,10 +16,14 @@ export default function(STATIC_FOLDER) {
       omitSourceMapUrl: true
     }, function(err, result) {
       if (!err) {
-        res.setHeader('content-type', 'text/css')
-        res.send(result.css.toString())
+        prefixer.process(result.css.toString())
+          .then(function (prefixed) {
+            res.setHeader('content-type', 'text/css')
+            res.send(prefixed.css)
+            next()
+          })
       }
-      next()
+
     })
   }
 }

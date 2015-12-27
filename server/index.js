@@ -5,12 +5,13 @@ import sassMiddleware from './middlewares/sass'
 import riot from 'riot'
 import routes from '../shared/routes'
 import apiRouter from './api-router'
+import FeedWebsockets from './feed-websockets'
 import { HOST_NAME, PORT, STATIC_FOLDER, TAGS_FOLDER, VIEWS_FOLDER, VIEWS_ENGINE } from '../shared/config'
 
 const app = express(),
   BASE = __dirname
 
-var server
+var server, feedWebsockets
 
 // static template engine
 app.set('views', join(BASE, VIEWS_FOLDER))
@@ -52,3 +53,8 @@ app.use(express.static(join(BASE, STATIC_FOLDER)))
 server = app.listen(PORT, HOST_NAME, function () {
   console.log('Example app listening at http://%s:%s', HOST_NAME, PORT)
 })
+
+// add some fancy websockets to this server
+feedWebsockets = new FeedWebsockets(server)
+
+

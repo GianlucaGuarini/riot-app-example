@@ -59,90 +59,14 @@
   };
 
   babelHelpers;
-  // App configuration constants
-
-  var PORT = 3000;
-  var HOST_NAME = 'localhost';
-
-  /**
-   * Private methods
-   */
-
-  function _ajaxRequest(url) {
-    return new Promise(function (resolve, reject) {
-      var request = new XMLHttpRequest();
-      request.open('GET', url, true);
-      request.onload = function () {
-        if (request.status >= 200 && request.status < 400) resolve(request.responseText);else reject(request);
-      };
-      request.onerror = reject;
-      request.send();
-    });
-  }
-
-  function _nodeRequest(url, hostname, port) {
-
-    var options = {
-      host: HOST_NAME,
-      port: PORT,
-      path: url
-    };
-    return new Promise(function (resolve, reject) {
-      http.get(options, function (res, body) {
-        res.on('data', function (chunk) {
-          resolve(chunk);
-        });
-      }).on('error', function (e) {
-        reject(e);
-      });
-    });
-  }
-
-  /**
-   * Public methods
-   */
-
-  /**
-   * Get the base url of the project reading the config variables
-   * @param   { String } hostname - to override the hostname
-   * @param   { Number } port - to override the port
-   * @returns { String } return the base path of the app
-   */
-  function getBase(hostname, port) {
-    return 'http://' + (hostname || HOST_NAME) + ':' + (port || PORT);
-  }
-
-  /**
-   * Detect if we are running the code on a node environment
-   * @returns {Boolean} - either true or false
-   */
-  function isNode() {
-    return typeof window === 'undefined';
-  }
-
-  /**
-   * Cheap fetch polyfill that works also on node because whatwg-fetch sucks!
-   * @param   { String } url - url to call
-   * @param   { String } hostname - optional hostname
-   * @param   { Number } port - optional port
-   * @returns { Promise } hoping to get this promise resolved..
-   */
-  function _fetch(url, hostname, port) {
-    if (isNode()) {
-      return _nodeRequest(url, hostname, port);
-    } else {
-      return _ajaxRequest('' + getBase(hostname, port) + url);
-    }
-  }
-
   var riot = (function (module) {
   var exports = module.exports;
-  /* Riot v2.3.11, @license MIT, (c) 2015 Muut Inc. + contributors */
+  /* Riot v2.3.12, @license MIT, (c) 2015 Muut Inc. + contributors */
 
   ;(function (window, undefined) {
     'use strict';
 
-    var riot = { version: 'v2.3.11', settings: {} },
+    var riot = { version: 'v2.3.12', settings: {} },
 
     // be aware, internal usage
     // ATTENTION: prefix the global dynamic variables with `__`
@@ -315,6 +239,7 @@
           HAS_ATTRIBUTE = 'hasAttribute',
           REPLACE = 'replace',
           POPSTATE = 'popstate',
+          HASHCHANGE = 'hashchange',
           TRIGGER = 'trigger',
           MAX_EMIT_STACK_LEVEL = 3,
           win = window,
@@ -327,6 +252,7 @@
           started = false,
           central = riot.observable(),
           routeFound = false,
+          debouncedEmit,
           base,
           current,
           parser,
@@ -354,6 +280,32 @@
             args = path.match(re);
 
         if (args) return args.slice(1);
+      }
+
+      /**
+       * Simple/cheap debounce implementation
+       * @param   {function} fn - callback
+       * @param   {number} delay - delay in seconds
+       * @returns {function} debounced function
+       */
+      function debounce(fn, delay) {
+        var t;
+        return function () {
+          clearTimeout(t);
+          t = setTimeout(fn, delay);
+        };
+      }
+
+      /**
+       * Set the window listeners to trigger the routes
+       * @param {boolean} autoExec - see route.start
+       */
+      function start(autoExec) {
+        debouncedEmit = debounce(emit, 1);
+        win[ADD_EVENT_LISTENER](POPSTATE, debouncedEmit);
+        win[ADD_EVENT_LISTENER](HASHCHANGE, debouncedEmit);
+        doc[ADD_EVENT_LISTENER](clickEvent, click);
+        if (autoExec) emit(true);
       }
 
       /**
@@ -444,6 +396,7 @@
        * Go to the path
        * @param {string} path - destination path
        * @param {string} title - page title
+       * @returns {boolean} - route not found flag
        */
       function go(path, title) {
         title = title || doc.title;
@@ -484,7 +437,7 @@
       prot.e = function (path) {
         this.$.concat('@').some(function (filter) {
           var args = (filter == '@' ? parser : secondParser)(normalize(path), normalize(filter));
-          if (args) {
+          if (typeof args != 'undefined') {
             this[TRIGGER].apply(null, [filter].concat(args));
             return routeFound = true; // exit from loop
           }
@@ -563,7 +516,8 @@
       /** Stop routing **/
       route.stop = function () {
         if (started) {
-          win[REMOVE_EVENT_LISTENER](POPSTATE, emit);
+          win[REMOVE_EVENT_LISTENER](POPSTATE, debouncedEmit);
+          win[REMOVE_EVENT_LISTENER](HASHCHANGE, debouncedEmit);
           doc[REMOVE_EVENT_LISTENER](clickEvent, click);
           central[TRIGGER]('stop');
           started = false;
@@ -576,11 +530,16 @@
        */
       route.start = function (autoExec) {
         if (!started) {
-          win[ADD_EVENT_LISTENER](POPSTATE, emit);
-          doc[ADD_EVENT_LISTENER](clickEvent, click);
+          if (document.readyState == 'complete') start(autoExec);
+          // the timeout is needed to solve
+          // a weird safari bug https://github.com/riot/route/issues/33
+          else win[ADD_EVENT_LISTENER]('load', function () {
+              setTimeout(function () {
+                start(autoExec);
+              }, 1);
+            });
           started = true;
         }
-        if (autoExec) emit(true);
       };
 
       /** Prepare the router **/
@@ -593,15 +552,15 @@
 
     /**
      * The riot template engine
-     * @version v2.3.12
+     * @version v2.3.19
      */
 
     /**
      * @module brackets
      *
      * `brackets         ` Returns a string or regex based on its parameter
-     * `brackets.settings` Mirrors the `riot.settings` object
-     * `brackets.set     ` The recommended option to change the current tiot brackets
+     * `brackets.settings` Mirrors the `riot.settings` object (use brackets.set in new code)
+     * `brackets.set     ` Change the current riot brackets
      */
 
     var brackets = (function (UNDEF) {
@@ -609,69 +568,77 @@
       var REGLOB = 'g',
           MLCOMMS = /\/\*[^*]*\*+(?:[^*\/][^*]*\*+)*\//g,
           STRINGS = /"[^"\\]*(?:\\[\S\s][^"\\]*)*"|'[^'\\]*(?:\\[\S\s][^'\\]*)*'/g,
-          S_QBSRC = STRINGS.source + '|' + /(?:[$\w\)\]]|\+\+|--)\s*(\/)(?![*\/])/.source + '|' + /\/(?=[^*\/])[^[\/\\]*(?:(?:\[(?:\\.|[^\]\\]*)*\]|\\.)[^[\/\\]*)*?(\/)[gim]*/.source,
+          S_QBSRC = STRINGS.source + '|' + /(?:\breturn\s+|(?:[$\w\)\]]|\+\+|--)\s*(\/)(?![*\/]))/.source + '|' + /\/(?=[^*\/])[^[\/\\]*(?:(?:\[(?:\\.|[^\]\\]*)*\]|\\.)[^[\/\\]*)*?(\/)[gim]*/.source,
           DEFAULT = '{ }',
           FINDBRACES = {
-        '(': _regExp('([()])|' + S_QBSRC, REGLOB),
-        '[': _regExp('([[\\]])|' + S_QBSRC, REGLOB),
-        '{': _regExp('([{}])|' + S_QBSRC, REGLOB)
+        '(': RegExp('([()])|' + S_QBSRC, REGLOB),
+        '[': RegExp('([[\\]])|' + S_QBSRC, REGLOB),
+        '{': RegExp('([{}])|' + S_QBSRC, REGLOB)
       };
 
       var cachedBrackets = UNDEF,
           _regex,
           _pairs = [];
 
-      function _regExp(source, flags) {
-        return new RegExp(source, flags);
-      }
-
       function _loopback(re) {
         return re;
       }
 
-      function _rewrite(re) {
-        return new RegExp(re.source.replace(/{/g, _pairs[2]).replace(/}/g, _pairs[3]), re.global ? REGLOB : '');
+      function _rewrite(re, bp) {
+        if (!bp) bp = _pairs;
+        return new RegExp(re.source.replace(/{/g, bp[2]).replace(/}/g, bp[3]), re.global ? REGLOB : '');
+      }
+
+      function _create(pair) {
+        var cvt,
+            arr = pair.split(' ');
+
+        if (pair === DEFAULT) {
+          arr[2] = arr[0];
+          arr[3] = arr[1];
+          cvt = _loopback;
+        } else {
+          if (arr.length !== 2 || /[\x00-\x1F<>a-zA-Z0-9'",;\\]/.test(pair)) {
+            throw new Error('Unsupported brackets "' + pair + '"');
+          }
+          arr = arr.concat(pair.replace(/(?=[[\]()*+?.^$|])/g, '\\').split(' '));
+          cvt = _rewrite;
+        }
+        arr[4] = cvt(arr[1].length > 1 ? /{[\S\s]*?}/ : /{[^}]*}/, arr);
+        arr[5] = cvt(/\\({|})/g, arr);
+        arr[6] = cvt(/(\\?)({)/g, arr);
+        arr[7] = RegExp('(\\\\?)(?:([[({])|(' + arr[3] + '))|' + S_QBSRC, REGLOB);
+        arr[8] = pair;
+        return arr;
       }
 
       function _reset(pair) {
-        pair = pair || DEFAULT;
+        if (!pair) pair = DEFAULT;
 
         if (pair !== _pairs[8]) {
-          var bp = pair.split(' ');
-
-          if (pair === DEFAULT) {
-            _pairs = bp.concat(bp);
-            _regex = _loopback;
-          } else {
-            if (bp.length !== 2 || /[\x00-\x1F<>a-zA-Z0-9'",;\\]/.test(pair)) {
-              throw new Error('Unsupported brackets "' + pair + '"');
-            }
-            _pairs = bp.concat(pair.replace(/(?=[[\]()*+?.^$|])/g, '\\').split(' '));
-            _regex = _rewrite;
-          }
-          _pairs[4] = _regex(_pairs[1].length > 1 ? /(?:^|[^\\]){[\S\s]*?}/ : /(?:^|[^\\]){[^}]*}/);
-          _pairs[5] = _regex(/\\({|})/g);
-          _pairs[6] = _regex(/(\\?)({)/g);
-          _pairs[7] = _regExp('(\\\\?)(?:([[({])|(' + _pairs[3] + '))|' + S_QBSRC, REGLOB);
-          _pairs[9] = _regex(/^\s*{\^?\s*([$\w]+)(?:\s*,\s*(\S+))?\s+in\s+(\S+)\s*}/);
-          _pairs[8] = pair;
+          _pairs = _create(pair);
+          _regex = pair === DEFAULT ? _loopback : _rewrite;
+          _pairs[9] = _regex(/^\s*{\^?\s*([$\w]+)(?:\s*,\s*(\S+))?\s+in\s+(\S.*)\s*}/);
+          _pairs[10] = _regex(/(^|[^\\]){=[\S\s]*?}/);
+          _brackets._rawOffset = _pairs[0].length;
         }
-        _brackets.settings.brackets = cachedBrackets = pair;
+        cachedBrackets = pair;
       }
 
       function _brackets(reOrIdx) {
-        _reset(_brackets.settings.brackets);
         return reOrIdx instanceof RegExp ? _regex(reOrIdx) : _pairs[reOrIdx];
       }
 
-      _brackets.split = function split(str, tmpl) {
+      _brackets.split = function split(str, tmpl, _bp) {
+        // istanbul ignore next: _bp is for the compiler
+        if (!_bp) _bp = _pairs;
 
         var parts = [],
             match,
             isexpr,
             start,
             pos,
-            re = _brackets(6);
+            re = _bp[6];
 
         isexpr = start = re.lastIndex = 0;
 
@@ -692,7 +659,7 @@
           if (!match[1]) {
             unescapeStr(str.slice(start, pos));
             start = re.lastIndex;
-            re = _pairs[6 + (isexpr ^= 1)];
+            re = _bp[6 + (isexpr ^= 1)];
             re.lastIndex = start;
           }
         }
@@ -704,7 +671,7 @@
         return parts;
 
         function unescapeStr(str) {
-          if (tmpl || isexpr) parts.push(str && str.replace(_pairs[5], '$1'));else parts.push(str);
+          if (tmpl || isexpr) parts.push(str && str.replace(_bp[5], '$1'));else parts.push(str);
         }
 
         function skipBraces(ch, pos) {
@@ -726,13 +693,34 @@
 
       _brackets.loopKeys = function loopKeys(expr) {
         var m = expr.match(_brackets(9));
-        return m ? { key: m[1], pos: m[2], val: _pairs[0] + m[3] + _pairs[1] } : { val: expr.trim() };
+        return m ? { key: m[1], pos: m[2], val: _pairs[0] + m[3].trim() + _pairs[1] } : { val: expr.trim() };
       };
 
       _brackets.array = function array(pair) {
-        _reset(pair || _brackets.settings.brackets);
-        return _pairs;
+        return _create(pair || cachedBrackets);
       };
+
+      var _settings;
+      function _setSettings(o) {
+        var b;
+        o = o || {};
+        b = o.brackets;
+        Object.defineProperty(o, 'brackets', {
+          set: _reset,
+          get: function get() {
+            return cachedBrackets;
+          },
+          enumerable: true
+        });
+        _settings = o;
+        _reset(b);
+      }
+      Object.defineProperty(_brackets, 'settings', {
+        set: _setSettings,
+        get: function get() {
+          return _settings;
+        }
+      });
 
       /* istanbul ignore next: in the node version riot is not in the scope */
       _brackets.settings = typeof riot !== 'undefined' && riot.settings || {};
@@ -741,8 +729,6 @@
       _brackets.R_STRINGS = STRINGS;
       _brackets.R_MLCOMMS = MLCOMMS;
       _brackets.S_QBLOCKS = S_QBSRC;
-
-      _reset(_brackets.settings.brackets);
 
       return _brackets;
     })();
@@ -757,8 +743,7 @@
 
     var tmpl = (function () {
 
-      var FALSE = !1,
-          _cache = {};
+      var _cache = {};
 
       function _tmpl(str, data) {
         if (!str) return str;
@@ -766,11 +751,19 @@
         return (_cache[str] || (_cache[str] = _create(str))).call(data, _logErr);
       }
 
+      _tmpl.isRaw = function (expr) {
+        return expr[brackets._rawOffset] === "=";
+      };
+
+      _tmpl.haveRaw = function (src) {
+        return brackets(10).test(src);
+      };
+
       _tmpl.hasExpr = brackets.hasExpr;
 
       _tmpl.loopKeys = brackets.loopKeys;
 
-      _tmpl.errorHandler = FALSE;
+      _tmpl.errorHandler = null;
 
       function _logErr(err, ctx) {
 
@@ -789,16 +782,16 @@
         var expr = _getTmpl(str);
         if (expr.slice(0, 11) !== 'try{return ') expr = 'return ' + expr;
 
-        return new Function('E', expr + ';'); // eslint-disable-line indent
+        return new Function('E', expr + ';');
       }
 
-      var RE_QBLOCK = new RegExp(brackets.S_QBLOCKS, 'g'),
+      var RE_QBLOCK = RegExp(brackets.S_QBLOCKS, 'g'),
           RE_QBMARK = /\x01(\d+)~/g;
 
       function _getTmpl(str) {
         var qstr = [],
             expr,
-            parts = brackets.split(str, 1);
+            parts = brackets.split(str.replace(/\u2057/g, '"'), 1);
 
         if (parts.length > 2 || parts[0]) {
           var i,
@@ -829,6 +822,8 @@
           RE_BRACE = /,|([[{(])|$/g;
 
       function _parseExpr(expr, asText, qstr) {
+
+        if (expr[0] === "=") expr = expr.slice(1);
 
         expr = expr.replace(RE_QBLOCK, function (s, div) {
           return s.length > 2 && !div ? '\x01' + (qstr.push(s) - 1) + '~' : s;
@@ -877,7 +872,7 @@
       var JS_VARNAME = /[,{][$\w]+:|(^ *|[^$\w\.])(?!(?:typeof|true|false|null|undefined|in|instanceof|is(?:Finite|NaN)|void|NaN|new|Date|RegExp|Math)(?![$\w]))([$_A-Za-z][$\w]*)/g;
 
       function _wrapExpr(expr, asText, key) {
-        var tb = FALSE;
+        var tb;
 
         expr = expr.replace(JS_VARNAME, function (match, p, mvar, pos, s) {
           if (mvar) {
@@ -913,6 +908,8 @@
 
       return _tmpl;
     })();
+
+    tmpl.version = brackets.version = 'v2.3.19';
 
     /*
       lib/browser/tag/mkdom.js
@@ -1107,7 +1104,7 @@
         }
 
         // loop all the new items
-        each(items, function (item, i) {
+        items.forEach(function (item, i) {
           // reorder only if the items are objects
           var _mustReorder = mustReorder && item instanceof Object,
               oldPos = oldItems.indexOf(item),
@@ -1167,7 +1164,7 @@
           tag._item = item;
           // cache the real parent tag internally
           defineProperty(tag, '_parent', parent);
-        });
+        }, true); // allow null values
 
         // remove the redundant tags
         unmountRedundant(items, tags);
@@ -1339,19 +1336,38 @@
         updateOpts();
         self.trigger('update', data);
         update(expressions, self);
-        self.trigger('updated');
+        // the updated event will be triggered
+        // once the DOM will be ready and all the reflow are completed
+        // this is useful if you want to get the "real" root properties
+        // 4 ex: root.offsetWidth ...
+        rAF(function () {
+          self.trigger('updated');
+        });
         return this;
       });
 
       defineProperty(this, 'mixin', function () {
         each(arguments, function (mix) {
+          var instance;
+
           mix = (typeof mix === 'undefined' ? 'undefined' : babelHelpers.typeof(mix)) === T_STRING ? riot.mixin(mix) : mix;
-          each(Object.keys(mix), function (key) {
+
+          // check if the mixin is a function
+          if (isFunction(mix)) {
+            // create the new mixin instance
+            instance = new mix();
+            // save the prototype to loop it afterwards
+            mix = mix.prototype;
+          } else instance = mix;
+
+          // loop the keys in the function prototype or the all object keys
+          each(Object.getOwnPropertyNames(mix), function (key) {
             // bind methods to self
-            if (key != 'init') self[key] = isFunction(mix[key]) ? mix[key].bind(self) : mix[key];
+            if (key != 'init') self[key] = isFunction(instance[key]) ? instance[key].bind(self) : instance[key];
           });
+
           // init method will be called automatically
-          if (mix.init) mix.init.bind(self)();
+          if (instance.init) instance.init.bind(self)();
         });
         return this;
       });
@@ -1548,7 +1564,11 @@
 
         // leave out riot- prefixes from strings inside textarea
         // fix #815: any value -> string
-        if (parent && parent.tagName == 'TEXTAREA') value = ('' + value).replace(/riot-/g, '');
+        if (parent && parent.tagName == 'TEXTAREA') {
+          value = ('' + value).replace(/riot-/g, '');
+          // change textarea's value
+          parent.value = value;
+        }
 
         // no change
         if (expr.value === value) return;
@@ -1617,7 +1637,7 @@
                     if (!value) return;
                   }
 
-                  if ((typeof value === 'undefined' ? 'undefined' : babelHelpers.typeof(value)) !== T_OBJECT) setAttr(dom, attrName, value);
+                  if (value && value != 0 && (typeof value === 'undefined' ? 'undefined' : babelHelpers.typeof(value)) !== T_OBJECT) setAttr(dom, attrName, value);
                 }
       });
     }
@@ -1655,13 +1675,13 @@
     }
 
     /**
-     * Convert a string containing dashes to camle case
+     * Convert a string containing dashes to camel case
      * @param   { String } string - input string
      * @returns { String } my-string -> myString
      */
     function toCamel(string) {
-      return string.replace(/(\-\w)/g, function (match) {
-        return match.toUpperCase().replace('-', '');
+      return string.replace(/-(\w)/g, function (_, c) {
+        return c.toUpperCase();
       });
     }
 
@@ -1933,6 +1953,18 @@
     }
 
     /**
+     * Create a generic DOM node, and fill it with innerHTML
+     * @param   { String } name - name of the DOM node we want to create
+     * @param   { String } innerHTML - innerHTML of the new DOM
+     * @returns { Object } DOM node just created
+     */
+    function mkElWithInnerHTML(name, innerHTML) {
+      var el = mkEl(name);
+      el.innerHTML = innerHTML || '';
+      return el;
+    }
+
+    /**
      * Replace the yield tag from any tag template with the innerHTML of the
      * original tag in the page
      * @param   { String } tmpl - tag implementation template
@@ -1940,7 +1972,23 @@
      * @returns { String } tag template updated without the yield tag
      */
     function replaceYield(tmpl, innerHTML) {
-      return tmpl.replace(/<yield\s*(?:\/>|>\s*<\/yield\s*>)/gi, innerHTML || '');
+      var tmplElement = mkElWithInnerHTML('div', tmpl);
+      // if ($('yield[from]'.tmplElement)) { // this issues test errors
+      if (tmplElement.querySelector && tmplElement.querySelector('yield[from]')) {
+        // code coverage path not taken (?)
+        // yield to(s) must be direct children from innerHTML(root), all other tags are ignored
+        each(mkElWithInnerHTML('div', innerHTML).childNodes, function (toYield) {
+          if (toYield.nodeType == 1 && toYield.tagName == 'YIELD' && toYield.getAttribute('to')) {
+            // replace all yield[from]
+            each($$('yield[from="' + toYield.getAttribute('to') + '"]', tmplElement), function (fromYield) {
+              fromYield.outerHTML = toYield.innerHTML;
+            });
+          }
+        });
+        return tmplElement.innerHTML;
+      } else
+        // just replace yield in tmpl with the innerHTML
+        return tmpl.replace(/<yield\s*(?:\/>|>\s*<\/yield\s*>)/gi, innerHTML || '');
     }
 
     /**
@@ -2062,6 +2110,15 @@
         styleNode.innerHTML += css;
       };
     })();
+
+    /**
+     * requestAnimationFrame polyfill
+     */
+    var rAF = (function (w) {
+      return w.requestAnimationFrame || w.webkitRequestAnimationFrame || w.mozRequestAnimationFrame || function (cb) {
+        setTimeout(cb, 1000 / 60);
+      };
+    })(window || {});
 
     /**
      * Mount a tag creating new Tag instance
@@ -2256,28 +2313,585 @@
     riot.Tag = Tag;
     // support CommonJS, AMD & browser
     /* istanbul ignore next */
-    if ((typeof exports === 'undefined' ? 'undefined' : babelHelpers.typeof(exports)) === T_OBJECT) module.exports = riot;else if (typeof define === 'function' && define.amd) define(function () {
+    if ((typeof exports === 'undefined' ? 'undefined' : babelHelpers.typeof(exports)) === T_OBJECT) module.exports = riot;else if ((typeof define === 'undefined' ? 'undefined' : babelHelpers.typeof(define)) === T_FUNCTION && babelHelpers.typeof(define.amd) !== T_UNDEF) define(function () {
       return window.riot = riot;
     });else window.riot = riot;
   })(typeof window != 'undefined' ? window : void 0);
   return module.exports;
   })({exports:{}});
 
-  var _class$1 = (function () {
+  var riot$1 = (riot && typeof riot === 'object' && 'default' in riot ? riot['default'] : riot);
+
+  var nprogress = (function (module) {
+  var exports = module.exports;
+  /* NProgress, (c) 2013, 2014 Rico Sta. Cruz - http://ricostacruz.com/nprogress
+   * @license MIT */
+
+  ;(function (root, factory) {
+
+    if (typeof define === 'function' && define.amd) {
+      define(factory);
+    } else if ((typeof exports === 'undefined' ? 'undefined' : babelHelpers.typeof(exports)) === 'object') {
+      module.exports = factory();
+    } else {
+      root.NProgress = factory();
+    }
+  })(this, function () {
+    var NProgress = {};
+
+    NProgress.version = '0.2.0';
+
+    var Settings = NProgress.settings = {
+      minimum: 0.08,
+      easing: 'ease',
+      positionUsing: '',
+      speed: 200,
+      trickle: true,
+      trickleRate: 0.02,
+      trickleSpeed: 800,
+      showSpinner: true,
+      barSelector: '[role="bar"]',
+      spinnerSelector: '[role="spinner"]',
+      parent: 'body',
+      template: '<div class="bar" role="bar"><div class="peg"></div></div><div class="spinner" role="spinner"><div class="spinner-icon"></div></div>'
+    };
+
+    /**
+     * Updates configuration.
+     *
+     *     NProgress.configure({
+     *       minimum: 0.1
+     *     });
+     */
+    NProgress.configure = function (options) {
+      var key, value;
+      for (key in options) {
+        value = options[key];
+        if (value !== undefined && options.hasOwnProperty(key)) Settings[key] = value;
+      }
+
+      return this;
+    };
+
+    /**
+     * Last number.
+     */
+
+    NProgress.status = null;
+
+    /**
+     * Sets the progress bar status, where `n` is a number from `0.0` to `1.0`.
+     *
+     *     NProgress.set(0.4);
+     *     NProgress.set(1.0);
+     */
+
+    NProgress.set = function (n) {
+      var started = NProgress.isStarted();
+
+      n = clamp(n, Settings.minimum, 1);
+      NProgress.status = n === 1 ? null : n;
+
+      var progress = NProgress.render(!started),
+          bar = progress.querySelector(Settings.barSelector),
+          speed = Settings.speed,
+          ease = Settings.easing;
+
+      progress.offsetWidth; /* Repaint */
+
+      queue(function (next) {
+        // Set positionUsing if it hasn't already been set
+        if (Settings.positionUsing === '') Settings.positionUsing = NProgress.getPositioningCSS();
+
+        // Add transition
+        css(bar, barPositionCSS(n, speed, ease));
+
+        if (n === 1) {
+          // Fade out
+          css(progress, {
+            transition: 'none',
+            opacity: 1
+          });
+          progress.offsetWidth; /* Repaint */
+
+          setTimeout(function () {
+            css(progress, {
+              transition: 'all ' + speed + 'ms linear',
+              opacity: 0
+            });
+            setTimeout(function () {
+              NProgress.remove();
+              next();
+            }, speed);
+          }, speed);
+        } else {
+          setTimeout(next, speed);
+        }
+      });
+
+      return this;
+    };
+
+    NProgress.isStarted = function () {
+      return typeof NProgress.status === 'number';
+    };
+
+    /**
+     * Shows the progress bar.
+     * This is the same as setting the status to 0%, except that it doesn't go backwards.
+     *
+     *     NProgress.start();
+     *
+     */
+    NProgress.start = function () {
+      if (!NProgress.status) NProgress.set(0);
+
+      var work = function work() {
+        setTimeout(function () {
+          if (!NProgress.status) return;
+          NProgress.trickle();
+          work();
+        }, Settings.trickleSpeed);
+      };
+
+      if (Settings.trickle) work();
+
+      return this;
+    };
+
+    /**
+     * Hides the progress bar.
+     * This is the *sort of* the same as setting the status to 100%, with the
+     * difference being `done()` makes some placebo effect of some realistic motion.
+     *
+     *     NProgress.done();
+     *
+     * If `true` is passed, it will show the progress bar even if its hidden.
+     *
+     *     NProgress.done(true);
+     */
+
+    NProgress.done = function (force) {
+      if (!force && !NProgress.status) return this;
+
+      return NProgress.inc(0.3 + 0.5 * Math.random()).set(1);
+    };
+
+    /**
+     * Increments by a random amount.
+     */
+
+    NProgress.inc = function (amount) {
+      var n = NProgress.status;
+
+      if (!n) {
+        return NProgress.start();
+      } else {
+        if (typeof amount !== 'number') {
+          amount = (1 - n) * clamp(Math.random() * n, 0.1, 0.95);
+        }
+
+        n = clamp(n + amount, 0, 0.994);
+        return NProgress.set(n);
+      }
+    };
+
+    NProgress.trickle = function () {
+      return NProgress.inc(Math.random() * Settings.trickleRate);
+    };
+
+    /**
+     * Waits for all supplied jQuery promises and
+     * increases the progress as the promises resolve.
+     *
+     * @param $promise jQUery Promise
+     */
+    (function () {
+      var initial = 0,
+          current = 0;
+
+      NProgress.promise = function ($promise) {
+        if (!$promise || $promise.state() === "resolved") {
+          return this;
+        }
+
+        if (current === 0) {
+          NProgress.start();
+        }
+
+        initial++;
+        current++;
+
+        $promise.always(function () {
+          current--;
+          if (current === 0) {
+            initial = 0;
+            NProgress.done();
+          } else {
+            NProgress.set((initial - current) / initial);
+          }
+        });
+
+        return this;
+      };
+    })();
+
+    /**
+     * (Internal) renders the progress bar markup based on the `template`
+     * setting.
+     */
+
+    NProgress.render = function (fromStart) {
+      if (NProgress.isRendered()) return document.getElementById('nprogress');
+
+      addClass(document.documentElement, 'nprogress-busy');
+
+      var progress = document.createElement('div');
+      progress.id = 'nprogress';
+      progress.innerHTML = Settings.template;
+
+      var bar = progress.querySelector(Settings.barSelector),
+          perc = fromStart ? '-100' : toBarPerc(NProgress.status || 0),
+          parent = document.querySelector(Settings.parent),
+          spinner;
+
+      css(bar, {
+        transition: 'all 0 linear',
+        transform: 'translate3d(' + perc + '%,0,0)'
+      });
+
+      if (!Settings.showSpinner) {
+        spinner = progress.querySelector(Settings.spinnerSelector);
+        spinner && removeElement(spinner);
+      }
+
+      if (parent != document.body) {
+        addClass(parent, 'nprogress-custom-parent');
+      }
+
+      parent.appendChild(progress);
+      return progress;
+    };
+
+    /**
+     * Removes the element. Opposite of render().
+     */
+
+    NProgress.remove = function () {
+      removeClass(document.documentElement, 'nprogress-busy');
+      removeClass(document.querySelector(Settings.parent), 'nprogress-custom-parent');
+      var progress = document.getElementById('nprogress');
+      progress && removeElement(progress);
+    };
+
+    /**
+     * Checks if the progress bar is rendered.
+     */
+
+    NProgress.isRendered = function () {
+      return !!document.getElementById('nprogress');
+    };
+
+    /**
+     * Determine which positioning CSS rule to use.
+     */
+
+    NProgress.getPositioningCSS = function () {
+      // Sniff on document.body.style
+      var bodyStyle = document.body.style;
+
+      // Sniff prefixes
+      var vendorPrefix = 'WebkitTransform' in bodyStyle ? 'Webkit' : 'MozTransform' in bodyStyle ? 'Moz' : 'msTransform' in bodyStyle ? 'ms' : 'OTransform' in bodyStyle ? 'O' : '';
+
+      if (vendorPrefix + 'Perspective' in bodyStyle) {
+        // Modern browsers with 3D support, e.g. Webkit, IE10
+        return 'translate3d';
+      } else if (vendorPrefix + 'Transform' in bodyStyle) {
+        // Browsers without 3D support, e.g. IE9
+        return 'translate';
+      } else {
+        // Browsers without translate() support, e.g. IE7-8
+        return 'margin';
+      }
+    };
+
+    /**
+     * Helpers
+     */
+
+    function clamp(n, min, max) {
+      if (n < min) return min;
+      if (n > max) return max;
+      return n;
+    }
+
+    /**
+     * (Internal) converts a percentage (`0..1`) to a bar translateX
+     * percentage (`-100%..0%`).
+     */
+
+    function toBarPerc(n) {
+      return (-1 + n) * 100;
+    }
+
+    /**
+     * (Internal) returns the correct CSS for changing the bar's
+     * position given an n percentage, and speed and ease from Settings
+     */
+
+    function barPositionCSS(n, speed, ease) {
+      var barCSS;
+
+      if (Settings.positionUsing === 'translate3d') {
+        barCSS = { transform: 'translate3d(' + toBarPerc(n) + '%,0,0)' };
+      } else if (Settings.positionUsing === 'translate') {
+        barCSS = { transform: 'translate(' + toBarPerc(n) + '%,0)' };
+      } else {
+        barCSS = { 'margin-left': toBarPerc(n) + '%' };
+      }
+
+      barCSS.transition = 'all ' + speed + 'ms ' + ease;
+
+      return barCSS;
+    }
+
+    /**
+     * (Internal) Queues a function to be executed.
+     */
+
+    var queue = (function () {
+      var pending = [];
+
+      function next() {
+        var fn = pending.shift();
+        if (fn) {
+          fn(next);
+        }
+      }
+
+      return function (fn) {
+        pending.push(fn);
+        if (pending.length == 1) next();
+      };
+    })();
+
+    /**
+     * (Internal) Applies css properties to an element, similar to the jQuery 
+     * css method.
+     *
+     * While this helper does assist with vendor prefixed property names, it 
+     * does not perform any manipulation of values prior to setting styles.
+     */
+
+    var css = (function () {
+      var cssPrefixes = ['Webkit', 'O', 'Moz', 'ms'],
+          cssProps = {};
+
+      function camelCase(string) {
+        return string.replace(/^-ms-/, 'ms-').replace(/-([\da-z])/gi, function (match, letter) {
+          return letter.toUpperCase();
+        });
+      }
+
+      function getVendorProp(name) {
+        var style = document.body.style;
+        if (name in style) return name;
+
+        var i = cssPrefixes.length,
+            capName = name.charAt(0).toUpperCase() + name.slice(1),
+            vendorName;
+        while (i--) {
+          vendorName = cssPrefixes[i] + capName;
+          if (vendorName in style) return vendorName;
+        }
+
+        return name;
+      }
+
+      function getStyleProp(name) {
+        name = camelCase(name);
+        return cssProps[name] || (cssProps[name] = getVendorProp(name));
+      }
+
+      function applyCss(element, prop, value) {
+        prop = getStyleProp(prop);
+        element.style[prop] = value;
+      }
+
+      return function (element, properties) {
+        var args = arguments,
+            prop,
+            value;
+
+        if (args.length == 2) {
+          for (prop in properties) {
+            value = properties[prop];
+            if (value !== undefined && properties.hasOwnProperty(prop)) applyCss(element, prop, value);
+          }
+        } else {
+          applyCss(element, args[1], args[2]);
+        }
+      };
+    })();
+
+    /**
+     * (Internal) Determines if an element or space separated list of class names contains a class name.
+     */
+
+    function hasClass(element, name) {
+      var list = typeof element == 'string' ? element : classList(element);
+      return list.indexOf(' ' + name + ' ') >= 0;
+    }
+
+    /**
+     * (Internal) Adds a class to an element.
+     */
+
+    function addClass(element, name) {
+      var oldList = classList(element),
+          newList = oldList + name;
+
+      if (hasClass(oldList, name)) return;
+
+      // Trim the opening space.
+      element.className = newList.substring(1);
+    }
+
+    /**
+     * (Internal) Removes a class from an element.
+     */
+
+    function removeClass(element, name) {
+      var oldList = classList(element),
+          newList;
+
+      if (!hasClass(element, name)) return;
+
+      // Replace the class name.
+      newList = oldList.replace(' ' + name + ' ', ' ');
+
+      // Trim the opening and closing spaces.
+      element.className = newList.substring(1, newList.length - 1);
+    }
+
+    /**
+     * (Internal) Gets a space separated list of the class names on the element. 
+     * The list is wrapped with a single space on each end to facilitate finding 
+     * matches within the list.
+     */
+
+    function classList(element) {
+      return (' ' + (element.className || '') + ' ').replace(/\s+/gi, ' ');
+    }
+
+    /**
+     * (Internal) Removes an element from the DOM.
+     */
+
+    function removeElement(element) {
+      element && element.parentNode && element.parentNode.removeChild(element);
+    }
+
+    return NProgress;
+  });
+  return module.exports;
+  })({exports:{}});
+
+  var NProgress = (nprogress && typeof nprogress === 'object' && 'default' in nprogress ? nprogress['default'] : nprogress);
+
+  // App configuration constants
+
+  var PORT = 3000;
+  var HOST_NAME = 'localhost';
+
+  /**
+   * Private methods
+   */
+
+  function _ajaxRequest(url) {
+    return new Promise(function (resolve, reject) {
+      var request = new XMLHttpRequest();
+      request.open('GET', url, true);
+      request.onload = function () {
+        if (request.status >= 200 && request.status < 400) resolve(request.responseText);else reject(request);
+      };
+      request.onerror = reject;
+      request.send();
+    });
+  }
+
+  function _nodeRequest(url, hostname, port) {
+
+    var options = {
+      host: HOST_NAME,
+      port: PORT,
+      path: url
+    };
+    return new Promise(function (resolve, reject) {
+      http.get(options, function (res, body) {
+        res.on('data', function (chunk) {
+          resolve(chunk);
+        });
+      }).on('error', function (e) {
+        reject(e);
+      });
+    });
+  }
+
+  /**
+   * Public methods
+   */
+
+  /**
+   * Get the base url of the project reading the config variables
+   * @param   { String } hostname - to override the hostname
+   * @param   { Number } port - to override the port
+   * @returns { String } return the base path of the app
+   */
+  function getBase(hostname, port) {
+    return 'http://' + (hostname || HOST_NAME) + ':' + (port || PORT);
+  }
+
+  /**
+   * Detect if we are running the code on a node environment
+   * @returns {Boolean} - either true or false
+   */
+  function isNode() {
+    return typeof window === 'undefined';
+  }
+
+  /**
+   * Cheap fetch polyfill that works also on node because whatwg-fetch sucks!
+   * @param   { String } url - url to call
+   * @param   { String } hostname - optional hostname
+   * @param   { Number } port - optional port
+   * @returns { Promise } hoping to get this promise resolved..
+   */
+  function fetch(url, hostname, port) {
+    if (isNode()) {
+      return _nodeRequest(url, hostname, port);
+    } else {
+      return _ajaxRequest('' + getBase(hostname, port) + url);
+    }
+  }
+
+  var _class$2 = (function () {
     function _class(opts) {
       babelHelpers.classCallCheck(this, _class);
 
-      riot.observable(this);
+      riot$1.observable(this);
+      this.isServer = typeof window === 'undefined';
+      this.isClient = !this.isServer;
       this.url = opts.url;
     }
 
     babelHelpers.createClass(_class, [{
       key: 'fetch',
-      value: function fetch() {
+      value: function fetch$$() {
         var _this = this;
 
         this.trigger('fetching');
-        return _fetch(this.url).then(function (res) {
+        return fetch(this.url).then(function (res) {
           var data = JSON.parse(res);
           _this.trigger('fetched', data);
           return data;
@@ -2287,7 +2901,7 @@
     return _class;
   })();
 
-  var _class = (function (_Gateway) {
+  var _class$1 = (function (_Gateway) {
     babelHelpers.inherits(_class, _Gateway);
 
     function _class() {
@@ -2296,50 +2910,115 @@
     }
 
     return _class;
-  })(_class$1);
+  })(_class$2);
+
+  var _class = (function (_Gateway) {
+    babelHelpers.inherits(_class, _Gateway);
+
+    function _class() {
+      babelHelpers.classCallCheck(this, _class);
+      return babelHelpers.possibleConstructorReturn(this, Object.getPrototypeOf(_class).apply(this, arguments));
+    }
+
+    babelHelpers.createClass(_class, [{
+      key: 'listen',
+      value: function listen() {
+        var _this2 = this;
+
+        // no need to run this on the server
+        if (this.isServer) return;
+        this.socket = io.connect(getBase(), { forceNew: true });
+        this.socket.on('news', function (news) {
+          _this2.trigger('news::published', news);
+        });
+      }
+    }]);
+    return _class;
+  })(_class$2);
 
   var routes = {
     '/': function _() {
-      return new _class({ url: '/api/index' });
+      return new _class$1({ url: '/api/index' });
+    },
+    '/feed': function feed() {
+      return new _class({ url: '/api/feed' });
     }
   };
 
-  riot.tag2('app', '<header> </header> <main name="main"> </main> <sidebar> </sidebar>', '', '', function (opts) {
+  riot$1.tag2('app', '<header> </header> <main name="main"> </main> <sidebar global-events="{globalEvents}" page="{view}"></sidebar>', '', '', function (opts) {
     var _this = this;
 
+    this.view = opts.view;
+    this.globalEvents = opts.globalEvents;
+
     this.mountSubview = function (data) {
-      riot.mount(_this.main, data.view, data);
+      _this.view = data.view;
+      riot$1.mount(_this.main, data.view, data);
+      _this.globalEvents.trigger('page::changed', _this.view);
     };
 
     if (opts.view) this.mountSubview(opts);
-  });
-  riot.tag2('preloader', '', '', '', function (opts) {});
-  riot.tag2('sidebar', '<p>I am the sidebar</p>', '', '', function (opts) {});
-  riot.tag2('index', '<p>{opts.data.message}</p>', '', '', function (opts) {}, '{ }');
+  }, '{ }');
+  riot$1.tag2('sidebar', '<nav> <ul> <li class="{active: page == \'index\'}"> <a href="/">Home</a> </li> <li class="{active: page == \'feed\'}"> <a href="/feed">Feed</a> </li> </ul> </nav>', '', '', function (opts) {
+    var _this2 = this;
 
-  var globalEvents = riot.observable();
+    this.page = opts.page;
+    this.globalEvents = opts.globalEvents;
+
+    this.globalEvents.on('page::changed', function (page) {
+      _this2.page = page;
+      _this2.update();
+    });
+  }, '{ }');
+  riot$1.tag2('feed', '<h1>{opts.data.title}</h1> <p>{opts.data.message}</p> <ul> <li each="{news}"> <h2>{title}</h2> <p>{description}</p> </li> </ul>', '', '', function (opts) {
+    var _this3 = this;
+
+    var onNewsPublished = function onNewsPublished(news) {
+      _this3.news.push(news);
+      _this3.update();
+    };
+
+    this.gateway = opts.gateway;
+    this.news = opts.data.news;
+
+    this.gateway.listen();
+    this.gateway.on('news::published', onNewsPublished);
+
+    this.on('unmount', function () {
+      _this3.gateway.socket.disconnect();
+    });
+  }, '{ }');
+  riot$1.tag2('index', '<h1>{opts.data.title}</h1> <p>{opts.data.message}</p>', '', '', function (opts) {}, '{ }');
+
+  var globalEvents = riot$1.observable();
 
   var app;
   var initialData = JSON.parse(window.initialData);
-  riot.route.base(getBase());
+  riot$1.route.base('/');
+  // start the progress bar
+  NProgress.start();
 
   Object.keys(routes).forEach(function (route) {
-    riot.route(route, function () {
+
+    riot$1.route(route, function () {
       if (!app) {
         initialData.globalEvents = globalEvents;
         initialData.gateway = routes[route]();
-        app = riot.mount('app', initialData)[0];
+        app = riot$1.mount('app', initialData)[0];
+        NProgress.done();
       } else {
         var gateway = routes[route]();
+        NProgress.start();
         gateway.fetch().then(function (data) {
           data.globalEvents = globalEvents;
           data.gateway = gateway;
           app.mountSubview(data);
+          NProgress.done();
         });
       }
     });
   });
 
-  riot.route.start(true);
+  riot$1.route.start(true);
 
 }));
