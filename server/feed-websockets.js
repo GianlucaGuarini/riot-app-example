@@ -1,4 +1,5 @@
 import socketIO from 'socket.io'
+import casual from 'casual'
 
 export default function(server) {
 
@@ -10,10 +11,11 @@ export default function(server) {
     var pollingTimer
     pollingTimer = setInterval(() => {
       socket.emit('news', {
-        title: `News title ${ new Date() }`,
-        'description': `News description  ${ new Date() }`
+        title: casual.title,
+        description: casual.description,
+        image: `https://placeimg.com/720/280/any?${ new Date().getMilliseconds() }`
       })
-    }, Math.random() * 3000)
+    }, 3000)
 
     socket.on('disconnect', () => clearTimeout(pollingTimer))
   })

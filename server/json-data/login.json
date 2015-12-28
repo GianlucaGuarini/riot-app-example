@@ -1,0 +1,7 @@
+{
+  "view": "login",
+  "data": {
+    "title": "Fake User Login",
+    "message": "Here you can simulate a fake use login screen dispatching global events"
+  }
+}

@@ -1,5 +1,6 @@
 import IndexGateway from './gateways/IndexGateway'
 import FeedGateway from './gateways/FeedGateway'
+import LoginGateway from './gateways/LoginGateway'
 
 export default {
   '/': function() {
@@ -7,5 +8,8 @@ export default {
   },
   '/feed': function() {
     return new FeedGateway({ url: '/api/feed' })
+  },
+  '/login': function() {
+    return new LoginGateway({ url: '/api/login' })
   }
 }

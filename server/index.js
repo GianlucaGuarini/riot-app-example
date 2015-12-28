@@ -1,12 +1,22 @@
 import express from 'express'
-import { join } from 'path'
 import glob from 'glob'
-import sassMiddleware from './middlewares/sass'
 import riot from 'riot'
 import routes from '../shared/routes'
 import apiRouter from './api-router'
+import sassMiddleware from './middlewares/sass'
 import FeedWebsockets from './feed-websockets'
-import { HOST_NAME, PORT, STATIC_FOLDER, TAGS_FOLDER, VIEWS_FOLDER, VIEWS_ENGINE } from '../shared/config'
+import User from '../shared/models/User'
+
+import { join } from 'path'
+
+import {
+  HOST_NAME,
+  PORT,
+  STATIC_FOLDER,
+  TAGS_FOLDER,
+  VIEWS_FOLDER,
+  VIEWS_ENGINE
+} from '../shared/config'
 
 const app = express(),
   BASE = __dirname
@@ -29,12 +39,14 @@ app.use(/\.sass$/, sassMiddleware(join(BASE, STATIC_FOLDER)))
 
 // set the app routes receiving the view to render and its data
 Object.keys(routes).forEach(function(route) {
-  app.get(route, function(req, res) {
+  app.get(route, function (req, res) {
     var gateway = routes[route]()
+
     gateway
       .fetch()
       .then(function(data) {
         data.gateway = gateway
+        data.user = new User()
         res.render('base', {
           initialData: JSON.stringify(data),
           body: riot.render('app', data)

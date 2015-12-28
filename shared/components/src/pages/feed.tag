@@ -1,8 +1,10 @@
 <feed>
   <h1>{ opts.data.title }</h1>
   <p>{ opts.data.message }</p>
+  <p if={ !news.length }>Loading the news... ( new news any 3 seconds )</p>
   <ul>
     <li each={ news }>
+      <img width="100%" src={ image } />
       <h2>{ title }</h2>
       <p>{ description }</p>
     </li>

@@ -2,9 +2,7 @@
   "view": "feed",
   "data": {
     "title": "Welcome to the live news feed",
-    "message": "hi",
-    "news": [
-
-    ]
+    "message": "I got some awesome news today for you",
+    "news": []
   }
 }

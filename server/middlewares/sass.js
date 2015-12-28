@@ -3,9 +3,7 @@ import { join } from 'path'
 import postcss from 'postcss'
 import autoprefixer from 'autoprefixer'
 
-var prefixer = postcss([ autoprefixer ]);
-
-
+var prefixer = postcss([autoprefixer])
 
 // auto compile the sass files on any request
 export default function(STATIC_FOLDER) {
@@ -15,15 +13,16 @@ export default function(STATIC_FOLDER) {
       indentedSyntax: false,
       omitSourceMapUrl: true
     }, function(err, result) {
-      if (!err) {
-        prefixer.process(result.css.toString())
+      if (!err)
+        prefixer
+          .process(result.css.toString())
           .then(function (prefixed) {
             res.setHeader('content-type', 'text/css')
             res.send(prefixed.css)
             next()
           })
-      }
-
+       else
+        throw new Error(err)
     })
   }
 }

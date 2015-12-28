@@ -17,6 +17,7 @@ ecmaFeatures:
   destructuring: true
   spread: true
   arrowFunctions: true
+  generators: true
   blockBindings: true
 
 globals:

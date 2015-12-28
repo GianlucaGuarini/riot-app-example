@@ -7,8 +7,15 @@
       <li class={ active: page == 'feed' }>
         <a href="/feed">Feed</a>
       </li>
+      <li class={ active: page == 'login' }>
+        <a href="/login">Login</a>
+      </li>
     </ul>
   </nav>
+  <footer>
+    <yield />
+  </footer>
+
   <script>
 
     this.page = opts.page

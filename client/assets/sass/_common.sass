@@ -2,15 +2,23 @@ body
   background: $body-background-color
   color: $font-color
   font-family: $font-family
+  font-size: 1.2rem
+  line-height: 1.5rem
 
 a
   color: $links-color
   text-decoration: none
 
 main
+  opacity: 0
   padding: 2rem
   box-sizing: border-box
-  width: calc(100% - 8rem)
+  width: calc(100% - #{$sidebar-width})
 
   h1
     margin-top: 0
+
+  h1,
+  h2
+    font-weight: 200
+    color: $headings-color

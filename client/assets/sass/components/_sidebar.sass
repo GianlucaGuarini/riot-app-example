@@ -4,8 +4,8 @@ sidebar
   top: 0
   height: 100%
   background: $sidebar-background
-  width: 8rem
-  padding: 2rem 1rem
+  width: $sidebar-width
+  padding: 1.8rem 0
   color: white
   box-sizing: border-box
   transition: 0.3s
@@ -18,7 +18,32 @@ sidebar
 
     li
       list-style: none
+      margin-bottom: 1px
+
+      &:hover,
+      &:active
+        a
+          background: $links-color
+
+      a
+        display: inline-block
+        width: 100%
+        color: white
+        padding: 0.5rem 1rem
 
       &.active
         a
-          color: $links-color-active
+          background: $links-color
+
+  footer
+    position: absolute
+    bottom: 2rem
+    left: 0
+    display: inline-block
+    color: white
+    width: 100%
+    line-height: 1rem
+    text-align: center
+
+    small
+      font-size: 0.8rem

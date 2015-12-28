@@ -9,7 +9,8 @@
     "build-js": "rollup -c rollup.config.js",
     "build": "npm run build-tags && npm run build-js",
     "start": "babel-node --presets es2015 -- server/index.js",
-    "watch": "nodemon -e js,tag --watch shared/components/src --watch client/assets/js/src -x 'npm run build'"
+    "watch": "nodemon -e js,tag --watch shared/components/src --watch client/assets/js/src -x 'npm run build'",
+    "watch-server": "nodemon -e js,tag --watch server --watch shared/components/src -x 'npm run start'"
   },
   "repository": {
     "type": "git",
@@ -28,20 +29,22 @@
   },
   "homepage": "https://github.com/GianlucaGuarini/riot-app-example#readme",
   "dependencies": {
-    "riot": "^2.3.12"
+    "nprogress": "^0.2.0",
+    "riot": "^2.3.12",
+    "sweetalert": "^1.1.3",
+    "velocity-animate": "^1.2.3"
   },
   "devDependencies": {
-    "autoprefixer": "^6.2.1",
+    "autoprefixer": "^6.2.2",
     "babel-cli": "^6.3.17",
     "babel-plugin-external-helpers-2": "^6.3.13",
-    "babel-plugin-transform-es2015-modules-umd": "^6.3.13",
     "babel-preset-es2015": "^6.3.13",
+    "casual": "^1.5.0",
     "ejs": "^2.3.4",
     "express": "^4.13.3",
     "glob": "^6.0.2",
     "node-sass": "^3.4.2",
     "nodemon": "^1.8.1",
-    "nprogress": "^0.2.0",
     "postcss": "^5.0.13",
     "riot-cli": "^2.3.14",
     "rollup": "^0.22.0",

@@ -2,6 +2,6 @@
   "view": "index",
   "data": {
     "title": "This is the homepage",
-    "message": "hi"
+    "message": "Hoping that this demo app could help you understanding you do not need any fancy framework to run a simple riot app"
   }
 }
