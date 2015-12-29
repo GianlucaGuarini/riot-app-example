@@ -1,6 +1,7 @@
 import Velocity from 'velocity-animate'
 import 'velocity-animate/velocity.ui'
 import swal from 'sweetalert'
+import Swiper from 'swiper'
 
 // add special animation features to the current tag instance
 riot.mixin('animation-features', {
@@ -17,6 +18,10 @@ riot.mixin('animation-features', {
   }
 })
 
+// enhanced alerts
 riot.mixin('alert', {
   alert: swal
 })
+
+// swiper
+riot.mixin('swiper', { Swiper })

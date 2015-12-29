@@ -8,7 +8,6 @@ import FeedWebsockets from './feed-websockets'
 import User from '../shared/models/User'
 
 import { join } from 'path'
-
 import {
   HOST_NAME,
   PORT,
@@ -21,12 +20,17 @@ import {
 const app = express(),
   BASE = __dirname
 
+// global constants
+global.IS_SERVER = true
+global.IS_CLIENT = false
+
 var server, feedWebsockets
 
 // static template engine
 app.set('views', join(BASE, VIEWS_FOLDER))
 app.set('view engine', VIEWS_ENGINE)
 
+// require all the tags
 // require all the tags
 glob(join(BASE, TAGS_FOLDER, '**', '*.tag'), function(err, tags) {
   tags.forEach(function(tag) {
@@ -40,7 +44,8 @@ app.use(/\.sass$/, sassMiddleware(join(BASE, STATIC_FOLDER)))
 // set the app routes receiving the view to render and its data
 Object.keys(routes).forEach(function(route) {
   app.get(route, function (req, res) {
-    var gateway = routes[route]()
+    // pass all the url variables as arguments
+    var gateway = routes[route](...Object.keys(req.params).map((k) => req.params[k]))
 
     gateway
       .fetch()
@@ -62,7 +67,7 @@ app.use('/api', apiRouter)
 app.use(express.static(join(BASE, STATIC_FOLDER)))
 
 // start the server
-server = app.listen(PORT, HOST_NAME, function () {
+server = app.listen(PORT, HOST_NAME, function() {
   console.log('Example app listening at http://%s:%s', HOST_NAME, PORT)
 })
 

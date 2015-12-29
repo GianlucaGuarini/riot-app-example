@@ -1,37 +1,44 @@
 <app>
   <main name="main">
   </main>
-  <sidebar global-events={ globalEvents } page={ view }>
-    <user-status global-events={ globalEvents } user={ parent.user }>
+  <sidebar state={ state }>
+    <user-status state={ state }>
     </user-status>
   </sidebar>
   <script>
 
-    var isClient = typeof window !== 'undefined'
-
-    this.view = opts.view
-    this.user = opts.user
-    this.globalEvents = riot.observable()
+    // creating the app global state
+    this.state = riot.observable({
+      user: opts.user,
+      view: null
+    })
 
     this.mountSubview = (data) => {
 
+      // we don't need to mount a new tag if nothing changed
+      if (data.view == this.state.view) return
+
+      // mount function shortcut
       var mount = () => riot.mount(this.main, data.view, data)
+      // update the state view prop
+      this.state.view = data.view
+      // extend the data passed to this sub-view adding the state
+      data.state = this.state
 
-      this.view = data.view
-      data.globalEvents = this.globalEvents
-      data.user = this.user
-
-      if (isClient)
+      if (IS_CLIENT)
         this
           .moveOut(this.main)
-          .then(() => this.moveIn(mount()[0].root))
+          .then(() => {
+            var tag = mount()[0]
+            this.moveIn(tag.root).then(() => tag.trigger('animation-completed'))
+          })
       else mount()
 
-      this.globalEvents.trigger('page::changed', this.view)
+      this.state.trigger('view::changed', this.state.view)
 
     }
 
-    if (isClient) {
+    if (IS_CLIENT) {
       this.mixin('animation-features')
       this.mixin('alert')
     }
@@ -39,33 +46,19 @@
     if (opts.view)
       this.mountSubview(opts)
 
-    // global events logic
+    // state events logic
 
-    /**
-     * User authentication
-     */
-    this.globalEvents.on('user::login', (data) => {
-      var email = data.email,
-        password = data.password,
-        res = this.user.auth(email, password)
+    // alert errors
+    // they can come from any view
+    this.state.on('user::error', (err) => this.alert('Login error', err))
 
-      if (res == true)
-        this.globalEvents.trigger('user::logged', this.user)
-      else
-        this.globalEvents.trigger('user::error', res)
-    })
-
-    this.globalEvents.on('user::error', (err) => {
-      this.alert('Login error', err)
-    })
-
-    this.globalEvents.on('user::logged', (err) => {
+    // confirm when the user will log in
+    this.state.on('user::logged', (err) => {
       this.alert(
         'Well done!',
-        `You are logged in dear ${ this.user.name }!`,
+        `You are logged in dear ${ this.state.user.name }!`,
         'success'
       )
     })
-
   </script>
 </app>

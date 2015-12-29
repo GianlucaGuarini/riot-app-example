@@ -1,0 +1,18 @@
+{
+  "view": "gallery",
+  "data": {
+    "title": "Welcome to image gallery",
+    "message": "Look at these beautiful pictures, note that the image current index will be preserved across the navigation",
+    "images": [
+      "https://placeimg.com/1024/520/any?1",
+      "https://placeimg.com/1024/520/any?2",
+      "https://placeimg.com/1024/520/any?3",
+      "https://placeimg.com/1024/520/any?4",
+      "https://placeimg.com/1024/520/any?5",
+      "https://placeimg.com/1024/520/any?6",
+      "https://placeimg.com/1024/520/any?7",
+      "https://placeimg.com/1024/520/any?8",
+      "https://placeimg.com/1024/520/any?9"
+    ]
+  }
+}

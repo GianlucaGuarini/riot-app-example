@@ -1,10 +1,10 @@
 export default class {
-  constructor(name) {
+  constructor(name = 'Jack') {
     this.name = name
     this.isLogged = false
   }
   // fake authentication
-  auth(email, password) {
+  authenticate(email, password) {
     if (password == 'foo') {
       return this.isLogged = true
     }

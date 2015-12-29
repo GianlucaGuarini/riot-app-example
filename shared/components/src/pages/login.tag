@@ -20,21 +20,30 @@
   </p>
 
   <script>
-
-    this.globalEvents = opts.globalEvents
-    this.user = opts.user
-
-    tryLogin() {
-      this.globalEvents.trigger('user::login', {
-        email: this.email.value,
-        password: this.password.value
-      })
-    }
-
-    this.globalEvents.on('user::logged', (user) => {
-      this.mixin('animation-features')
+    var onUserLogged = (user) => {
       this.user = user
       this.moveOut(this.form).then(() => this.update())
+    }
+
+    this.state = opts.state
+    this.user = this.state.user
+
+    if (this.state.isClient)
+      this.mixin('animation-features')
+
+    tryLogin() {
+      var res = this.user.authenticate(this.email.value, this.password.value)
+
+      if (res == true)
+        this.state.trigger('user::logged', this.user)
+      else
+        this.state.trigger('user::error', res)
+    }
+
+    this.state.on('user::logged', onUserLogged)
+
+    this.on('unmount', () => {
+      this.state.off('user::logged', onUserLogged)
     })
   </script>
 </login>

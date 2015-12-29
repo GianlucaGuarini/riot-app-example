@@ -1,13 +1,16 @@
 <sidebar>
   <nav>
     <ul>
-      <li class={ active: page == 'index' }>
+      <li class={ active: state.view == 'index' }>
         <a href="/">Home</a>
       </li>
-      <li class={ active: page == 'feed' }>
+      <li class={ active: state.view == 'feed' }>
         <a href="/feed">Feed</a>
       </li>
-      <li class={ active: page == 'login' }>
+      <li class={ active: state.view == 'gallery' }>
+        <a href="/gallery">Gallery</a>
+      </li>
+      <li class={ active: state.view == 'login' }>
         <a href="/login">Login</a>
       </li>
     </ul>
@@ -17,14 +20,7 @@
   </footer>
 
   <script>
-
-    this.page = opts.page
-    this.globalEvents = opts.globalEvents
-
-    this.globalEvents.on('page::changed', (page) => {
-      this.page = page
-      this.update()
-    })
-
+    this.state = opts.state
+    this.state.on('view::changed', () => this.update())
   </script>
 </sidebar>

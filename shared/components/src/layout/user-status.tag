@@ -8,9 +8,9 @@
   </small>
 
   <script>
-    this.user = opts.user
-    this.globalEvents = opts.globalEvents
+    this.state = opts.state
+    this.user = this.state.user
 
-    this.globalEvents.on('user::logged', this.update)
+    this.state.on('user::logged', this.update)
   </script>
 </user-status>

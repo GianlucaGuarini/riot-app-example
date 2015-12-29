@@ -24,6 +24,8 @@ globals:
   riot: true
   socket: true
   io: true
+  IS_CLIENT: true
+  IS_SERVER: true
 
   ###########################################################################
   #                                                                         #

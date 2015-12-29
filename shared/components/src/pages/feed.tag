@@ -10,7 +10,6 @@
     </li>
   </ul>
   <script>
-
     var onNewsPublished = (news) => {
       this.news.push(news)
       this.update()
@@ -24,7 +23,7 @@
 
     this.on('unmount', () => {
       this.gateway.socket.disconnect()
+      this.gateway.off('news::published', onNewsPublished)
     })
-
   </script>
 </feed>
