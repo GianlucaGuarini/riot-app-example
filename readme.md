@@ -2,7 +2,7 @@
 
 ## Philosophy
 
-Use mostly your mind and only the tools your app really need: riot allows you doing both things!
+Use mostly your mind and only the tools your app really needs: riot allows you doing both things!
 
 ## Info
 
