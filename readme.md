@@ -6,7 +6,7 @@ Use mostly your mind and only the tools your app really need: riot allows you do
 
 ## Info
 
-This app is really simple and it may not be perfect because I have coded it in a couple of days but it's enough to answer the following riotjs FAQ questions:
+This app is really simple and it may not be perfect because I have coded it in a couple of days but it's enough to answer to the following FAQ:
 
   - How can I render riot components on the server?
   - How can I dispatch events across several riot components?
