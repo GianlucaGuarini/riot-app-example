@@ -36,7 +36,7 @@ export default {
     npm({
       jsnext: true,
       main: true,
-      skyp: ['http']
+      skip: ['http']
     }),
     inject({
       riot: 'riot/riot'

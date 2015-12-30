@@ -2,7 +2,7 @@
   "view": "feed",
   "data": {
     "title": "Welcome to the live news feed",
-    "message": "I got some awesome news today for you, ( it is using websokets )",
+    "message": "I got some awesome news today for you, ( it is using websockets )",
     "news": []
   }
 }
