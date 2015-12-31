@@ -1,4 +1,4 @@
-# Simple polymorphic riot app
+# Simple isomorphic riot app
 
 ## Philosophy
 
