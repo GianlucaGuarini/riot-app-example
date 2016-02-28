@@ -31,7 +31,6 @@ app.set('views', join(BASE, VIEWS_FOLDER))
 app.set('view engine', VIEWS_ENGINE)
 
 // require all the tags
-// require all the tags
 glob(join(BASE, TAGS_FOLDER, '**', '*.tag'), function(err, tags) {
   tags.forEach(function(tag) {
     require(tag)
