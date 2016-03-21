@@ -1,7 +1,7 @@
 import npm from 'rollup-plugin-npm'
 import commonjs from 'rollup-plugin-commonjs'
-import inject from 'rollup-plugin-inject'
 import babel from 'rollup-plugin-babel'
+import riot  from 'rollup-plugin-riot'
 
 export default {
   entry: 'client/assets/js/src/index.js',
@@ -33,14 +33,12 @@ export default {
         'external-helpers-2'
       ]
     }),
+    commonjs(),
+    riot(),
     npm({
       jsnext: true,
       main: true,
-      skip: ['http']
-    }),
-    inject({
-      riot: 'riot/riot'
-    }),
-    commonjs()
+      browser: true
+    })
   ]
 }

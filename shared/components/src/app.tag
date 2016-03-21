@@ -1,3 +1,13 @@
+// import the layout components
+import './layout/sidebar.tag'
+import './layout/user-status.tag'
+// import thre pages
+import './pages/index.tag'
+import './pages/gallery.tag'
+import './pages/login.tag'
+import './pages/feed.tag'
+import swal from 'sweetalert'
+
 <app>
   <main name="main">
   </main>
@@ -40,7 +50,6 @@
 
     if (IS_CLIENT) {
       this.mixin('animation-features')
-      this.mixin('alert')
     }
 
     if (opts.view)
@@ -54,7 +63,7 @@
 
     // confirm when the user will log in
     this.state.on('user::logged', (err) => {
-      this.alert(
+      swal(
         'Well done!',
         `You are logged in dear ${ this.state.user.name }!`,
         'success'

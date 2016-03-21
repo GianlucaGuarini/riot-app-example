@@ -1,5 +1,7 @@
-import '../../../../shared/components/lib/tags'
 import '../../../../shared/components/mixins'
+import '../../../../shared/components/src/app.tag'
+
+import riot from 'riot/riot'
 import User from '../../../../shared/models/User'
 import routes from '../../../../shared/routes'
 import NProgress from 'nprogress'
