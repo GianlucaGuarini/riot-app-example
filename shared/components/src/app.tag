@@ -1,7 +1,7 @@
 // import the layout components
 import './layout/sidebar.tag'
 import './layout/user-status.tag'
-// import thre pages
+// import all the pages
 import './pages/index.tag'
 import './pages/gallery.tag'
 import './pages/login.tag'
