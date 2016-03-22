@@ -1,13 +1,3 @@
-// import the layout components
-import './layout/sidebar.tag'
-import './layout/user-status.tag'
-// import all the pages
-import './pages/index.tag'
-import './pages/gallery.tag'
-import './pages/login.tag'
-import './pages/feed.tag'
-import swal from 'sweetalert'
-
 <app>
   <main name="main">
   </main>
@@ -50,6 +40,7 @@ import swal from 'sweetalert'
 
     if (IS_CLIENT) {
       this.mixin('animation-features')
+      this.mixin('swal')
     }
 
     if (opts.view)
@@ -59,11 +50,11 @@ import swal from 'sweetalert'
 
     // alert errors
     // they can come from any view
-    this.state.on('user::error', (err) => this.alert('Login error', err))
+    this.state.on('user::error', (err) => this.swal('Login error', err))
 
     // confirm when the user will log in
     this.state.on('user::logged', (err) => {
-      swal(
+      this.swal(
         'Well done!',
         `You are logged in dear ${ this.state.user.name }!`,
         'success'

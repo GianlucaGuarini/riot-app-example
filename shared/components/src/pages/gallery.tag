@@ -1,5 +1,3 @@
-import Swiper from 'swiper'
-
 <gallery>
   <h1>{ opts.data.title }</h1>
   <p>{ opts.data.message }</p>
@@ -29,8 +27,9 @@ import Swiper from 'swiper'
     this.gateway = opts.gateway
 
     if (IS_CLIENT) {
+      this.mixin('swiper')
       this.one('animation-completed', () => {
-        this.swiper = new Swiper(
+        this.swiper = new this.Swiper(
           this['swiper-container'], {
             pagination: this['swiper-pagination'],
             nextButton: this['swiper-button-next'],

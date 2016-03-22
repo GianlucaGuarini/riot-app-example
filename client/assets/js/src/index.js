@@ -1,4 +1,12 @@
 import '../../../../shared/components/mixins'
+// import the layout components
+import '../../../../shared/components/src/layout/sidebar.tag'
+import '../../../../shared/components/src/layout/user-status.tag'
+// import all the pages
+import '../../../../shared/components/src/pages/index.tag'
+import '../../../../shared/components/src/pages/gallery.tag'
+import '../../../../shared/components/src/pages/login.tag'
+import '../../../../shared/components/src/pages/feed.tag'
 import '../../../../shared/components/src/app.tag'
 
 import riot from 'riot/riot'
