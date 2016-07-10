@@ -25,8 +25,8 @@ riot.route.base('/')
 NProgress.start()
 
 Object.keys(routes).forEach(function(route) {
-  riot.route(route, function() {
-    var gateway = routes[route](...arguments)
+  riot.route(route, function(...args) {
+    var gateway = routes[route](...args)
     if (!app) {
 
       // extend the gateway using the initial data
@@ -39,13 +39,15 @@ Object.keys(routes).forEach(function(route) {
       app = riot.mount('app', initialData)[0]
       NProgress.done()
     } else {
-      NProgress.start()
+      if (!gateway.wasFetched) NProgress.start()
+
       gateway.fetch()
         .then(function(data) {
           data.gateway = gateway
           app.mountSubview(data)
           NProgress.done()
         })
+
     }
   })
 })

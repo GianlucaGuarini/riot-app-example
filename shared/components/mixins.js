@@ -19,5 +19,5 @@ riot.mixin('animation-features', {
   }
 })
 
-riot.mixin('swal',{ swal })
+riot.mixin('swal', { swal })
 riot.mixin('swiper', { Swiper })

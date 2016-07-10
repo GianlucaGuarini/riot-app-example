@@ -6,12 +6,13 @@ export default class {
   constructor(opts) {
     riot.observable(this)
     this.url = opts.url
+    this.wasFetched = false
     this._data = null
   }
   // fetch new data from the api caching the result
   fetch() {
     // was it already fetched
-    if (!this._data) {
+    if (!this.wasFetched) {
       this.trigger('fetching')
       return fetch(this.url)
         .then((res) => {

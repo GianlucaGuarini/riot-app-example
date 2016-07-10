@@ -1,4 +1,4 @@
-import npm from 'rollup-plugin-npm'
+import nodeResolve from 'rollup-plugin-node-resolve'
 import commonjs from 'rollup-plugin-commonjs'
 import babel from 'rollup-plugin-babel'
 import riot  from 'rollup-plugin-riot'
@@ -31,11 +31,12 @@ export default {
         'transform-es2015-typeof-symbol',
         'transform-es2015-unicode-regex',
         'external-helpers-2'
-      ]
+      ],
+      exclude: 'node_modules/**'
     }),
     commonjs(),
     riot(),
-    npm({
+    nodeResolve({
       jsnext: true,
       main: true,
       browser: true
