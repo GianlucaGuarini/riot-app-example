@@ -26,7 +26,7 @@ NProgress.start()
 
 Object.keys(routes).forEach(function(route) {
   riot.route(route, function(...args) {
-    var gateway = routes[route](...args)
+    var gateway = routes[route](args)
     if (!app) {
 
       // extend the gateway using the initial data
