@@ -1,6 +1,4 @@
 import express from 'express'
-import glob from 'glob'
-import riot from 'riot'
 import routes from '../shared/routes'
 import apiRouter from './api-router'
 import sassMiddleware from './middlewares/sass'
@@ -17,25 +15,17 @@ import {
   VIEWS_ENGINE
 } from '../shared/config'
 
+import riot from 'riot'
+riot.require('../shared/components/app.tag')
+
 const app = express(),
   BASE = __dirname
-
-// global constants
-global.IS_SERVER = true
-global.IS_CLIENT = false
 
 var server, feedWebsockets
 
 // static template engine
 app.set('views', join(BASE, VIEWS_FOLDER))
 app.set('view engine', VIEWS_ENGINE)
-
-// require all the tags
-glob(join(BASE, TAGS_FOLDER, '**', '*.tag'), function(err, tags) {
-  tags.forEach(function(tag) {
-    require(tag)
-  })
-})
 
 // auto compile the sass files on any request
 app.use(/\.sass$/, sassMiddleware(join(BASE, STATIC_FOLDER)))

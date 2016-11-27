@@ -1,15 +1,6 @@
-import '../../../../shared/components/mixins'
-// import the layout components
-import '../../../../shared/components/src/layout/sidebar.tag'
-import '../../../../shared/components/src/layout/user-status.tag'
-// import all the pages
-import '../../../../shared/components/src/pages/index.tag'
-import '../../../../shared/components/src/pages/gallery.tag'
-import '../../../../shared/components/src/pages/login.tag'
-import '../../../../shared/components/src/pages/feed.tag'
-import '../../../../shared/components/src/app.tag'
+import '../../../../shared/components/app.tag'
 
-import riot from 'riot/riot'
+import route from 'riot-route'
 import User from '../../../../shared/models/User'
 import routes from '../../../../shared/routes'
 import NProgress from 'nprogress'
@@ -20,13 +11,13 @@ var app,
 window.IS_SERVER = false
 window.IS_CLIENT = true
 
-riot.route.base('/')
+route.base('/')
 // start the progress bar
 NProgress.start()
 
-Object.keys(routes).forEach(function(route) {
-  riot.route(route, function(...args) {
-    var gateway = routes[route](args)
+Object.keys(routes).forEach(function(path) {
+  route(path, function(...args) {
+    var gateway = routes[path](args)
     if (!app) {
 
       // extend the gateway using the initial data
@@ -52,7 +43,7 @@ Object.keys(routes).forEach(function(route) {
   })
 })
 
-riot.route.start(true)
+route.start(true)
 
 
 

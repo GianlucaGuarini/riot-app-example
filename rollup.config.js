@@ -1,6 +1,6 @@
 import nodeResolve from 'rollup-plugin-node-resolve'
 import commonjs from 'rollup-plugin-commonjs'
-import babel from 'rollup-plugin-babel'
+import buble from 'rollup-plugin-buble'
 import riot  from 'rollup-plugin-riot'
 
 export default {
@@ -8,38 +8,12 @@ export default {
   dest: 'client/assets/js/bundle.js',
   format: 'umd',
   plugins: [
-    babel({
-      // all the es2015
-      // excluding transform-es2015-modules-commonjs
-      plugins: [
-        'check-es2015-constants',
-        'transform-es2015-arrow-functions',
-        'transform-es2015-block-scoped-functions',
-        'transform-es2015-block-scoping',
-        'transform-es2015-classes',
-        'transform-es2015-computed-properties',
-        'transform-es2015-destructuring',
-        'transform-es2015-for-of',
-        'transform-es2015-function-name',
-        'transform-es2015-literals',
-        'transform-es2015-object-super',
-        'transform-es2015-parameters',
-        'transform-es2015-shorthand-properties',
-        'transform-es2015-spread',
-        'transform-es2015-sticky-regex',
-        'transform-es2015-template-literals',
-        'transform-es2015-typeof-symbol',
-        'transform-es2015-unicode-regex',
-        'external-helpers-2'
-      ],
-      exclude: 'node_modules/**'
-    }),
-    commonjs(),
     riot(),
+    buble(),
+    commonjs(),
     nodeResolve({
       jsnext: true,
-      main: true,
-      browser: true
+      main: true
     })
   ]
 }

@@ -6,6 +6,17 @@
     </user-status>
   </sidebar>
   <script>
+    import './mixins'
+    // import the layout components
+    import './layout/sidebar.tag'
+    import './layout/user-status.tag'
+    // import all the pages
+    import './pages/index.tag'
+    import './pages/gallery.tag'
+    import './pages/login.tag'
+    import './pages/feed.tag'
+
+    import swal from 'sweetalert'
 
     // creating the app global state
     this.state = riot.observable({
@@ -40,7 +51,6 @@
 
     if (IS_CLIENT) {
       this.mixin('animation-features')
-      this.mixin('swal')
     }
 
     if (opts.view)
@@ -54,7 +64,7 @@
 
     // confirm when the user will log in
     this.state.on('user::logged', (err) => {
-      this.swal(
+      swal(
         'Well done!',
         `You are logged in dear ${ this.state.user.name }!`,
         'success'

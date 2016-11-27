@@ -21,7 +21,7 @@ export default function(STATIC_FOLDER) {
             res.send(prefixed.css)
             next()
           })
-       else
+      else
         throw new Error(err)
     })
   }

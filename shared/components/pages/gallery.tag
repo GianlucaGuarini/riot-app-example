@@ -18,18 +18,20 @@
       <div class="swiper-button-prev" name="swiper-button-prev"></div>
   </article>
   <script>
-    var onSlideChanged = (id) => {
-        riot.route(`gallery/${this.gateway.slideId}`) // update the url
-        this.swiper.slideTo(id)
-      }
+    import route from 'riot-route'
+    import Swiper from 'swiper'
+
+    const onSlideChanged = (id) => {
+      route(`gallery/${this.gateway.slideId}`) // update the url
+      this.swiper.slideTo(id)
+    }
 
     this.state = opts.state
     this.gateway = opts.gateway
 
     if (IS_CLIENT) {
-      this.mixin('swiper')
       this.one('animation-completed', () => {
-        this.swiper = new this.Swiper(
+        this.swiper = new Swiper(
           this['swiper-container'], {
             pagination: this['swiper-pagination'],
             nextButton: this['swiper-button-next'],
