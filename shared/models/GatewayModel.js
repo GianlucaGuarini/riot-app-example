@@ -1,5 +1,5 @@
 import { fetch } from '../helpers'
-import riot from 'riot/riot'
+import riot from 'riot'
 
 // cached data
 export default class {

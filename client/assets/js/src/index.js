@@ -1,5 +1,8 @@
+import Velocity from 'velocity-animate'
+import 'velocity-animate/velocity.ui'
 import '../../../../shared/components/app.tag'
-
+import '../../../../shared/components/mixins'
+import riot from 'riot'
 import route from 'riot-route'
 import User from '../../../../shared/models/User'
 import routes from '../../../../shared/routes'

@@ -1,5 +1,3 @@
-import Velocity from 'velocity-animate'
-import 'velocity-animate/velocity.ui'
 import { mixin } from 'riot'
 
 // add special animation features to the current tag instance
@@ -16,3 +14,4 @@ mixin('animation-features', {
     return Velocity(el, this.defaultTransitions.out)
   }
 })
+

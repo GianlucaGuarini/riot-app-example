@@ -26,6 +26,9 @@ globals:
   io: true
   IS_CLIENT: true
   IS_SERVER: true
+  Velocity: true
+  swal: true
+  Swiper: true
 
   ###########################################################################
   #                                                                         #

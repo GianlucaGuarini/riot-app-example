@@ -13,7 +13,7 @@ This app is really simple and it may not be perfect because I have coded it in a
   - How can I store/manage my data state?
   - How can I share the same router paths on the client and on the server?
   - How can I create a bundle file building my riot tags for my production app?
-  - How can I use es6/babel with my riot tags?
+  - How can I use es6 with my riot tags?
 
 ## Setup
 
