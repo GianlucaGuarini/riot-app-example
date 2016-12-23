@@ -15,7 +15,7 @@ import {
   VIEWS_ENGINE
 } from '../shared/config'
 
-import riot from 'riot'
+import { render } from 'riot'
 import '../shared/components/app.tag'
 
 const app = express(),
@@ -43,7 +43,7 @@ Object.keys(routes).forEach(function(route) {
         data.user = new User()
         res.render('base', {
           initialData: JSON.stringify(data),
-          body: riot.render('app', data)
+          body: render('app', data)
         })
       })
   })

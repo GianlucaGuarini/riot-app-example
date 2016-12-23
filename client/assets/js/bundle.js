@@ -15274,7 +15274,7 @@ riot$2.tag2('app', '<main ref="main"> </main> <sidebar state="{state}"> <user-st
 
 
 
-    this.state = riot$2.observable({
+    this.state = observable({
       user: opts.user,
       view: null
     });
@@ -15283,7 +15283,7 @@ riot$2.tag2('app', '<main ref="main"> </main> <sidebar state="{state}"> <user-st
 
       if (data.view == this$1.state.view) { return }
 
-      var mount$$1 = function () { return riot$2.mount(this$1.refs.main, data.view, data); };
+      var _mount = function () { return mount$$1(this$1.refs.main, data.view, data); };
 
       this$1.state.view = data.view;
 
@@ -15293,10 +15293,10 @@ riot$2.tag2('app', '<main ref="main"> </main> <sidebar state="{state}"> <user-st
         { this$1
           .moveOut(this$1.refs.main)
           .then(function () {
-            var tag$$1 = mount$$1()[0];
+            var tag$$1 = _mount()[0];
             this$1.moveIn(tag$$1.root).then(function () { return tag$$1.trigger('animation-completed'); });
           }); }
-      else { mount$$1(); }
+      else { _mount(); }
 
       this$1.state.trigger('view::changed', this$1.state.view);
 
@@ -15385,7 +15385,7 @@ function getBase(hostname, port) {
 // cached data
 var Gateway = (function () {
   function anonymous(opts) {
-    riot$2.observable(this);
+    observable(this);
     this.url = opts.url;
     this.wasFetched = false;
     this._data = null;
@@ -16019,7 +16019,7 @@ Object.keys(routes).forEach(function(path) {
 
       initialData.gateway = gateway;
       initialData.user = new User();
-      app = riot$2.mount('app', initialData)[0];
+      app = mount$$1('app', initialData)[0];
       nprogress.done();
     } else {
       if (!gateway.wasFetched) { nprogress.start(); }

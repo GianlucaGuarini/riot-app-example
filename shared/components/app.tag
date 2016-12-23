@@ -6,6 +6,7 @@
     </user-status>
   </sidebar>
   <script>
+    import { observable, mount } from 'riot'
     // import the layout components
     import './layout/sidebar.tag'
     import './layout/user-status.tag'
@@ -16,7 +17,7 @@
     import './pages/feed.tag'
 
     // creating the app global state
-    this.state = riot.observable({
+    this.state = observable({
       user: opts.user,
       view: null
     })
@@ -26,7 +27,7 @@
       // we don't need to mount a new tag if nothing changed
       if (data.view == this.state.view) return
       // mount function shortcut
-      var mount = () => riot.mount(this.refs.main, data.view, data)
+      var _mount = () => mount(this.refs.main, data.view, data)
       // update the state view prop
       this.state.view = data.view
       // extend the data passed to this sub-view adding the state
@@ -36,10 +37,10 @@
         this
           .moveOut(this.refs.main)
           .then(() => {
-            var tag = mount()[0]
+            var tag = _mount()[0]
             this.moveIn(tag.root).then(() => tag.trigger('animation-completed'))
           })
-      else mount()
+      else _mount()
 
       this.state.trigger('view::changed', this.state.view)
 

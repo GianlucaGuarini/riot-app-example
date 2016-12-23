@@ -1,10 +1,10 @@
 import { fetch } from '../helpers'
-import riot from 'riot'
+import { observable } from 'riot'
 
 // cached data
 export default class {
   constructor(opts) {
-    riot.observable(this)
+    observable(this)
     this.url = opts.url
     this.wasFetched = false
     this._data = null

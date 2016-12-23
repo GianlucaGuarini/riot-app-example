@@ -33,3 +33,9 @@ $ npm start
 $ npm run watch # watch the client js files
 $ npm run watch-server # watch the server js files
 ```
+
+## TODO
+
+- Simplify the app logic that at moment is a bit too complicate for what it does
+- Use always immutable data avoiding manipulating objects
+- Implement redux like events api

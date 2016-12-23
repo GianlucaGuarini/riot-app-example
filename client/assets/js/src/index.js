@@ -2,7 +2,7 @@ import Velocity from 'velocity-animate'
 import 'velocity-animate/velocity.ui'
 import '../../../../shared/components/app.tag'
 import '../../../../shared/components/mixins'
-import riot from 'riot'
+import { mount } from 'riot'
 import route from 'riot-route'
 import User from '../../../../shared/models/User'
 import routes from '../../../../shared/routes'
@@ -30,7 +30,7 @@ Object.keys(routes).forEach(function(path) {
 
       initialData.gateway = gateway
       initialData.user = new User()
-      app = riot.mount('app', initialData)[0]
+      app = mount('app', initialData)[0]
       NProgress.done()
     } else {
       if (!gateway.wasFetched) NProgress.start()
